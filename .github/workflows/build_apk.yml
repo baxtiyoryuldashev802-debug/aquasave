@@ -24,12 +24,14 @@ jobs:
                   if target.endswith('/'):
                       os.makedirs(target, exist_ok=True)
                   else:
-                      os.makedirs(os.path.dirname(target), exist_ok=True)
+                      parent = os.path.dirname(target)
+                      if parent:
+                          os.makedirs(parent, exist_ok=True)
                       with open(target, 'wb') as out:
                           out.write(z.read(f))
-          print("Fayllar muvaffaqiyatli chiqarildi!")
-          print(os.listdir('.'))
+          print("Fayllar muvaffaqiyatli va to'liq chiqarildi!")
           EOF
+          ls -la flutter_app
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
