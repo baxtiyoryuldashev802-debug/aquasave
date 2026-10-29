@@ -1,4 +1,4 @@
-name: Build AquaSave APK
+name: Build AquaSave iOS IPA
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build Android APK
-    runs-on: ubuntu-latest
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-14
 
     steps:
       - name: Checkout Repository
@@ -32,12 +32,6 @@ jobs:
           print("Fayllar to'liq chiqarildi!")
           EOF
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
@@ -45,22 +39,25 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Gradle & Build APK
+      - name: Build iOS App & Package IPA
         run: |
           cd flutter_app
-          # settings_screen.dart ga etishmayotgan importni joylash
           python3 -c "
           p = 'lib/views/settings_screen.dart'
           with open(p, 'r') as f: c = f.read()
           if 'esp32_client.dart' not in c:
               with open(p, 'w') as f: f.write(\"import '../core/network/esp32_client.dart';\n\" + c)
           "
-          flutter create --platforms=android --org=uz.aquasave .
+          flutter create --platforms=ios --org=uz.aquasave .
           flutter pub get
-          flutter build apk --release
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r -q AquaSave.ipa Payload/
 
-      - name: Upload APK Artifact
+      - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AquaSave-Release-APK
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          name: AquaSave-iOS-IPA
+          path: flutter_app/build/ios/iphoneos/AquaSave.ipa
