@@ -29,9 +29,8 @@ jobs:
                           os.makedirs(parent, exist_ok=True)
                       with open(target, 'wb') as out:
                           out.write(z.read(f))
-          print("Fayllar muvaffaqiyatli va to'liq chiqarildi!")
+          print("Fayllar to'liq chiqarildi!")
           EOF
-          ls -la flutter_app
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -49,6 +48,13 @@ jobs:
       - name: Generate Android Gradle & Build APK
         run: |
           cd flutter_app
+          # settings_screen.dart ga etishmayotgan importni joylash
+          python3 -c "
+          p = 'lib/views/settings_screen.dart'
+          with open(p, 'r') as f: c = f.read()
+          if 'esp32_client.dart' not in c:
+              with open(p, 'w') as f: f.write(\"import '../core/network/esp32_client.dart';\n\" + c)
+          "
           flutter create --platforms=android --org=uz.aquasave .
           flutter pub get
           flutter build apk --release
